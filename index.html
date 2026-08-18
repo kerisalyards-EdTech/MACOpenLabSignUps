@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Homepage Generator – Mount Aloysius Nursing</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+    :root {
+      --primary:    #095398;
+      --light-blue: #24abe2;
+      --purple:     #8a498f;
+      --navy:       #051d3c;
+      --surface:    #f4f7fb;
+      --border:     #dde4ef;
+      --text:       #1a1a2e;
+      --muted:      #5a6480;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text); min-height: 100vh; }
+
+    header {
+      background: var(--navy); color: #fff;
+      padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem;
+    }
+    header .logo-mark {
+      width: 36px; height: 36px; background: var(--light-blue); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 1.1rem; color: #fff; flex-shrink: 0;
+    }
+    header h1 { font-family: 'Source Serif 4', serif; font-size: 1.1rem; font-weight: 600; }
+    header p  { font-size: 0.8rem; color: #a8bcd4; margin-top: 0.1rem; }
+
+    .workspace { display: grid; grid-template-columns: 420px 1fr; gap: 0; min-height: calc(100vh - 64px); }
+
+    .form-panel {
+      background: #fff; border-right: 1px solid var(--border);
+      padding: 1.75rem 1.5rem; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+
+    .panel-title {
+      font-family: 'Source Serif 4', serif; font-size: 1rem; font-weight: 600;
+      color: var(--navy); padding-bottom: 0.6rem; border-bottom: 2px solid var(--border);
+    }
+    .panel-subtitle {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.4; margin-top: 0.4rem;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 1rem; }
+    .field label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.35rem;
+    }
+    .field input, .field textarea, .field select {
+      width: 100%; padding: 0.55rem 0.75rem; border: 1.5px solid var(--border);
+      border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      color: var(--text); background: #fff; transition: border-color 0.15s; resize: vertical;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(9,83,152,0.12);
+    }
+    .field textarea { min-height: 80px; }
+
+    /* Department picker */
+    .dept-picker { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.5rem; }
+    .dept-btn {
+      padding: 0.65rem 0.5rem; border: 2px solid var(--border); border-radius: 8px;
+      background: #fff; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    }
+    .dept-btn .code { font-family: 'Source Serif 4', serif; font-weight: 700; font-size: 1rem; display: block; }
+    .dept-btn .name { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; display: block; line-height: 1.3; }
+    .dept-btn[data-dept="NUAS"] { border-color: #24abe2; }
+    .dept-btn[data-dept="NUAS"].active { background: #095398; color: #fff; border-color: #095398; }
+    .dept-btn[data-dept="NUAS"].active .name { color: #c8e8f7; }
+    .dept-btn[data-dept="NUBS"] { border-color: #8a498f; }
+    .dept-btn[data-dept="NUBS"].active { background: #8a498f; color: #fff; border-color: #8a498f; }
+    .dept-btn[data-dept="NUBS"].active .name { color: #e8caea; }
+    .dept-btn[data-dept="NUR"]  { border-color: #051d3c; }
+    .dept-btn[data-dept="NUR"].active  { background: #051d3c; color: #fff; border-color: #051d3c; }
+    .dept-btn[data-dept="NUR"].active .name { color: #a8bcd4; }
+
+    /* Format toggle */
+    .format-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .fmt-btn {
+      padding: 0.65rem 0.5rem; border: 2px solid var(--border); border-radius: 8px;
+      background: #fff; cursor: pointer; text-align: center; transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--muted);
+    }
+    .fmt-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .fmt-btn .fmt-icon { font-size: 1.2rem; display: block; margin-bottom: 0.2rem; }
+
+    /* Schedule fields */
+    .day-fields { display: flex; flex-direction: column; gap: 0.5rem; }
+    .day-row { display: flex; gap: 0.5rem; align-items: center; }
+    .day-row label { font-size: 0.82rem; color: var(--muted); white-space: nowrap; min-width: 50px; }
+    .day-row input { flex: 1; }
+
+    /* Configurable link sections */
+    .link-section-builder { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    /* Each link row: label input + url input + remove button */
+    .link-row {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr auto;
+      gap: 0.35rem;
+      align-items: center;
+    }
+    .link-row input {
+      width: 100%; padding: 0.45rem 0.6rem; border: 1.5px solid var(--border);
+      border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+      color: var(--text); background: #fff;
+    }
+    .link-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(9,83,152,0.12); }
+    .link-row .col-head {
+      font-size: 0.7rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    /* Weekly / schedule content link rows */
+    .week-link-row { display: grid; grid-template-columns: 64px 1fr; gap: 0.5rem; align-items: center; }
+    .week-link-row.has-days-2 { grid-template-columns: 64px 1fr 1fr; }
+    .week-link-row.has-days-3 { grid-template-columns: 64px 1fr 1fr 1fr; }
+    .week-link-row .week-num {
+      font-size: 0.78rem; font-weight: 700; color: var(--navy);
+      font-family: 'Source Serif 4', serif;
+    }
+    .week-link-row input {
+      width: 100%; padding: 0.42rem 0.6rem; border: 1.5px solid var(--border);
+      border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+      color: var(--text); background: #fff;
+    }
+    .week-link-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(9,83,152,0.12); }
+    .week-link-row input.filled { border-color: #16a34a; background: #f0fdf4; }
+    .week-link-day-labels { display: grid; gap: 0.5rem; padding-left: 64px; margin-bottom: 0.1rem; }
+    .week-link-day-labels span {
+      font-size: 0.68rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    .remove-btn {
+      width: 28px; height: 28px; background: #fee2e2; border: none; border-radius: 6px;
+      color: #b91c1c; font-size: 1rem; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .remove-btn:hover { background: #fca5a5; }
+
+    .add-row-btn {
+      align-self: flex-start; background: none; border: 1.5px dashed var(--border);
+      border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif; color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    .add-row-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f5ff; }
+
+    /* Objectives */
+    .obj-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .obj-row { display: flex; gap: 0.4rem; align-items: flex-start; }
+    .obj-row textarea {
+      flex: 1; min-height: 52px; font-size: 0.88rem; padding: 0.45rem 0.65rem;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      font-family: 'DM Sans', sans-serif; color: var(--text); resize: vertical;
+    }
+    .obj-row textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(9,83,152,0.12); }
+    .obj-row .remove-btn { margin-top: 4px; }
+
+    .form-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* Color swatch labels for section builders */
+    .swatch-label {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+    .copy-btn {
+      width: 100%; padding: 0.8rem; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+      font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .copy-btn:hover { background: var(--navy); }
+    .copy-btn.copied { background: #16a34a; }
+
+    .hint {
+      font-size: 0.78rem; color: var(--muted); line-height: 1.5;
+      background: #f0f5ff; border-radius: 6px; padding: 0.6rem 0.75rem;
+      border-left: 3px solid var(--light-blue);
+    }
+
+    .preview-panel { background: var(--surface); overflow-y: auto; padding: 2rem; }
+    .preview-label {
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .preview-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .preview-frame {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.5rem 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); max-width: 760px;
+      font-family: Arial, Helvetica, sans-serif; font-size: 0.95rem; line-height: 1.6; color: #1a1a1a;
+    }
+    .preview-frame h2 { font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 1rem 0; }
+    .preview-frame a  { color: #095398; text-decoration: none; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 900px) {
+      .workspace { grid-template-columns: 1fr; }
+      .preview-panel { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark" aria-hidden="true">M</div>
+  <div>
+    <h1>Canvas Homepage Generator</h1>
+    <p>Mount Aloysius College — Department of Nursing</p>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- ══ FORM ══ -->
+  <aside class="form-panel" aria-label="Course information form">
+
+    <!-- Department -->
+    <div>
+      <h2 class="panel-title">Course Information</h2>
+    </div>
+    <div class="field">
+      <label>Department</label>
+      <div class="dept-picker" role="group" aria-label="Select department">
+        <button class="dept-btn active" data-dept="NUAS" type="button" aria-pressed="true">
+          <span class="code">NUAS</span><span class="name">Nursing Associate</span>
+        </button>
+        <button class="dept-btn" data-dept="NUBS" type="button" aria-pressed="false">
+          <span class="code">NUBS</span><span class="name">Nursing BS</span>
+        </button>
+        <button class="dept-btn" data-dept="NUR" type="button" aria-pressed="false">
+          <span class="code">NUR</span><span class="name">Nursing</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field">
+        <label for="course-name">Course Name</label>
+        <input type="text" id="course-name" value="Pathophysiology" />
+      </div>
+      <div class="field">
+        <label for="course-number">Course Number</label>
+        <input type="text" id="course-number" value="201" />
+      </div>
+      <div class="field">
+        <label for="instructor-name">Instructor Name &amp; Credentials</label>
+        <input type="text" id="instructor-name" value="Dr. Gabriel Beam DNP, RN" />
+      </div>
+      <div class="field">
+        <label for="instructor-email">Email</label>
+        <input type="email" id="instructor-email" value="gbeam@mtaloy.edu" />
+      </div>
+      <div class="field">
+        <label for="instructor-office">Office</label>
+        <input type="text" id="instructor-office" value="Admin 206" />
+      </div>
+      <div class="field">
+        <label for="instructor-phone">Phone</label>
+        <input type="tel" id="instructor-phone" value="814-886-6573" />
+      </div>
+      <div class="field">
+        <label for="course-desc">Course Description</label>
+        <textarea id="course-desc" placeholder="Enter the course description here..."></textarea>
+      </div>
+    </div>
+
+    <hr class="form-divider" />
+
+    <!-- ── Course Resources (purple buttons, instructor header area) ── -->
+    <div>
+      <h2 class="panel-title">Course Resources</h2>
+      <p class="panel-subtitle">A <strong>Need Help?</strong> button linking to the Canvas support course is always included here and can't be removed. Add any other purple buttons below — tutoring links, office hours booking, etc. — those stay optional.</p>
+      <div style="margin-top:0.75rem;">
+        <div class="link-row" style="margin-bottom:0.3rem; grid-template-columns: 1fr 1.4fr auto; opacity:0.75;">
+          <span style="font-size:0.85rem; font-weight:600; color:var(--purple);">🔒 Need Help?</span>
+          <span style="font-size:0.78rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">mountaloysius.instructure.com/courses/8571</span>
+          <span></span>
+        </div>
+        <div class="link-row" style="margin-bottom:0.3rem;">
+          <span class="col-head">Button Label</span>
+          <span class="col-head">URL</span>
+          <span></span>
+        </div>
+        <div class="link-section-builder" id="resources-list"></div>
+        <button type="button" class="add-row-btn" style="margin-top:0.4rem;" onclick="addLinkRow('resources-list')">+ Add button</button>
+      </div>
+    </div>
+
+    <hr class="form-divider" />
+
+    <!-- ── Main Course Links (blue buttons) ── -->
+    <div>
+      <h2 class="panel-title">Main Course Links</h2>
+      <p class="panel-subtitle">Blue buttons — syllabus, calendar, handbook, etc. Paste any Canvas or external URL. Leave empty to omit this section.</p>
+      <div style="margin-top:0.75rem;">
+        <div class="link-row" style="margin-bottom:0.3rem;">
+          <span class="col-head">Button Label</span>
+          <span class="col-head">URL</span>
+          <span></span>
+        </div>
+        <div class="link-section-builder" id="main-links-list">
+          <div class="link-row">
+            <input type="text" placeholder="Button label" value="Syllabus" />
+            <input type="text" placeholder="URL" value="" />
+            <button type="button" class="remove-btn" onclick="removeLinkRow(this)" aria-label="Remove">×</button>
+          </div>
+          <div class="link-row">
+            <input type="text" placeholder="Button label" value="Course Calendar" />
+            <input type="text" placeholder="URL" value="" />
+            <button type="button" class="remove-btn" onclick="removeLinkRow(this)" aria-label="Remove">×</button>
+          </div>
+          <div class="link-row">
+            <input type="text" placeholder="Button label" value="Nursing Student Handbook 2024–2025" />
+            <input type="text" placeholder="URL" value="" />
+            <button type="button" class="remove-btn" onclick="removeLinkRow(this)" aria-label="Remove">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-row-btn" style="margin-top:0.4rem;" onclick="addLinkRow('main-links-list')">+ Add button</button>
+      </div>
+    </div>
+
+    <hr class="form-divider" />
+
+    <!-- ── Course Materials Format ── -->
+    <div>
+      <h2 class="panel-title">Course Materials Format</h2>
+      <div style="margin-top:0.75rem;" class="format-toggle" role="group" aria-label="Select course format">
+        <button class="fmt-btn active" data-fmt="weekly" type="button" aria-pressed="true">
+          <span class="fmt-icon">📋</span>Weekly Pages
+        </button>
+        <button class="fmt-btn" data-fmt="schedule" type="button" aria-pressed="false">
+          <span class="fmt-icon">📅</span>Class Schedule
+        </button>
+      </div>
+    </div>
+
+    <!-- Weekly options -->
+    <div id="weekly-options">
+      <div class="field">
+        <label for="num-weeks">Number of Weeks</label>
+        <input type="number" id="num-weeks" value="16" min="1" max="30" />
+      </div>
+    </div>
+
+    <!-- Schedule options -->
+    <div id="schedule-options" class="hidden">
+      <div class="field-group">
+        <div class="field">
+          <label for="num-days">Days Per Week</label>
+          <select id="num-days">
+            <option value="2">2 days per week</option>
+            <option value="3">3 days per week</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Day Names</label>
+          <div class="day-fields" id="day-name-fields">
+            <div class="day-row"><label>Day 1</label><input type="text" class="day-name" value="Tuesday" /></div>
+            <div class="day-row"><label>Day 2</label><input type="text" class="day-name" value="Thursday" /></div>
+            <div class="day-row hidden"><label>Day 3</label><input type="text" class="day-name" value="" /></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="num-weeks-sched">Number of Weeks</label>
+          <input type="number" id="num-weeks-sched" value="16" min="1" max="30" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly / schedule content links -->
+    <div>
+      <h2 class="panel-title">Weekly Content Links</h2>
+      <p class="panel-subtitle">Paste the Canvas URL for each week (or each week + day) below. These fill in the Week 1, Week 2… links generated in the section above. Leave any blank and a placeholder will be left in the HTML so it's easy to spot and finish later.</p>
+      <div style="margin-top:0.75rem; display:flex; flex-direction:column; gap:0.4rem;" id="week-links-rows"></div>
+    </div>
+
+    <hr class="form-divider" />
+
+    <!-- Special links (purple stripe, below weekly/schedule) -->
+    <div>
+      <h2 class="panel-title">Special Links</h2>
+      <p class="panel-subtitle">Purple stripe links below the weekly or schedule section — speaker series, group projects, etc. Leave empty to omit.</p>
+      <div style="margin-top:0.75rem;">
+        <div class="link-row" style="margin-bottom:0.3rem;">
+          <span class="col-head">Link Label</span>
+          <span class="col-head">URL</span>
+          <span></span>
+        </div>
+        <div class="link-section-builder" id="special-links-list"></div>
+        <button type="button" class="add-row-btn" style="margin-top:0.4rem;" onclick="addLinkRow('special-links-list')">+ Add link</button>
+      </div>
+    </div>
+
+    <hr class="form-divider" />
+
+    <!-- ── Additional Resources (navy buttons) ── -->
+    <div>
+      <h2 class="panel-title">Additional Resources</h2>
+      <p class="panel-subtitle">Navy buttons at the bottom — modules, library, external tools, etc. Leave empty to omit this section.</p>
+      <div style="margin-top:0.75rem;">
+        <div class="link-row" style="margin-bottom:0.3rem;">
+          <span class="col-head">Button Label</span>
+          <span class="col-head">URL</span>
+          <span></span>
+        </div>
+        <div class="link-section-builder" id="additional-links-list">
+          <div class="link-row">
+            <input type="text" placeholder="Button label" value="All Course Modules" />
+            <input type="text" placeholder="URL" value="" />
+            <button type="button" class="remove-btn" onclick="removeLinkRow(this)" aria-label="Remove">×</button>
+          </div>
+          <div class="link-row">
+            <input type="text" placeholder="Button label" value="Library Resources" />
+            <input type="text" placeholder="URL" value="https://www.mtaloy.edu/academics/library/" />
+            <button type="button" class="remove-btn" onclick="removeLinkRow(this)" aria-label="Remove">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-row-btn" style="margin-top:0.4rem;" onclick="addLinkRow('additional-links-list')">+ Add button</button>
+      </div>
+    </div>
+
+    <hr class="form-divider" />
+
+    <!-- ── Objectives ── -->
+    <div>
+      <h2 class="panel-title">Course Objectives</h2>
+      <div style="margin-top:0.75rem;" class="obj-list" id="obj-list">
+        <div class="obj-row">
+          <textarea placeholder="Enter objective..."></textarea>
+          <button type="button" class="remove-btn" onclick="removeObjRow(this)" aria-label="Remove objective">×</button>
+        </div>
+      </div>
+      <button type="button" class="add-row-btn" style="margin-top:0.4rem;" onclick="addObjRow()">+ Add objective</button>
+    </div>
+
+    <div>
+      <p class="hint">Fill in the fields above, then click Copy HTML and paste into the Canvas page HTML editor (the &lt;&nbsp;&gt; button). URLs you don't have yet will appear as placeholders to fill in after pasting.</p>
+      <button class="copy-btn" id="copy-btn" type="button" onclick="copyHTML()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy HTML for Canvas
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ══ PREVIEW ══ -->
+  <main class="preview-panel" aria-label="Live preview">
+    <p class="preview-label">Live Preview</p>
+    <div class="preview-frame" id="preview-frame"></div>
+  </main>
+
+</div>
+
+<script>
+  // ─────────────────────────────────────────
+  //  Config
+  // ─────────────────────────────────────────
+  const THEMES = {
+    NUAS: { bannerBg:'#095398', bannerAccent:'#24abe2', bannerText:'#ffffff', bannerSubtext:'#c8e8f7', label:'Associate Degree Nursing Program' },
+    NUBS: { bannerBg:'#8a498f', bannerAccent:'#c48dca', bannerText:'#ffffff', bannerSubtext:'#f0ddf2', label:'Bachelor of Science in Nursing Program' },
+    NUR:  { bannerBg:'#051d3c', bannerAccent:'#24abe2', bannerText:'#ffffff', bannerSubtext:'#a8bcd4', label:'Nursing Program' },
+  };
+
+  let currentDept   = 'NUAS';
+  let currentFormat = 'weekly';
+
+  // Always-on Course Resources link. Required on every homepage — must
+  // stay first in the purple "Course Resources" list no matter what the
+  // instructor adds or removes in the form.
+  const NEED_HELP_LINK = { label: 'Need Help?', url: 'https://mountaloysius.instructure.com/courses/8571' };
+
+  // ─────────────────────────────────────────
+  //  Pickers
+  // ─────────────────────────────────────────
+  document.querySelectorAll('.dept-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dept-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+      currentDept = btn.dataset.dept; update();
+    });
+  });
+
+  document.querySelectorAll('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.fmt-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+      currentFormat = btn.dataset.fmt;
+      document.getElementById('weekly-options').classList.toggle('hidden',   currentFormat !== 'weekly');
+      document.getElementById('schedule-options').classList.toggle('hidden', currentFormat !== 'schedule');
+      renderWeekLinks();
+      update();
+    });
+  });
+
+  document.getElementById('num-days').addEventListener('change', function() {
+    document.querySelectorAll('#day-name-fields .day-row')[2].classList.toggle('hidden', this.value !== '3');
+    renderWeekLinks();
+    update();
+  });
+
+  document.getElementById('num-weeks').addEventListener('input', () => { renderWeekLinks(); update(); });
+  document.getElementById('num-weeks-sched').addEventListener('input', () => { renderWeekLinks(); update(); });
+  document.getElementById('day-name-fields').addEventListener('input', () => { renderWeekLinks(); update(); });
+
+  document.addEventListener('input', e => { if (e.target.closest('.form-panel')) update(); });
+
+  document.getElementById('week-links-rows').addEventListener('input', e => {
+    if (e.target.tagName === 'INPUT') e.target.classList.toggle('filled', !!e.target.value.trim());
+  });
+
+  // ─────────────────────────────────────────
+  //  Weekly / schedule link rows
+  // ─────────────────────────────────────────
+  function collectWeekLinkValues() {
+    const map = {};
+    document.querySelectorAll('#week-links-rows input').forEach(inp => {
+      const key = inp.dataset.day !== undefined && inp.dataset.day !== '' ? `${inp.dataset.week}-${inp.dataset.day}` : inp.dataset.week;
+      map[key] = inp.value.trim();
+    });
+    return map;
+  }
+
+  function renderWeekLinks() {
+    const prev = collectWeekLinkValues();
+    const container = document.getElementById('week-links-rows');
+    container.innerHTML = '';
+
+    if (currentFormat === 'weekly') {
+      const numWeeks = Math.max(1, parseInt(val('num-weeks')) || 16);
+      for (let w = 1; w <= numWeeks; w++) {
+        const row = document.createElement('div');
+        row.className = 'week-link-row';
+        const saved = prev[w] || '';
+        row.innerHTML = `<span class="week-num">Week ${w}</span>
+          <input type="url" data-week="${w}" placeholder="Paste Week ${w} page URL" value="${escHtml(saved)}" />`;
+        container.appendChild(row);
+      }
+    } else {
+      const numWeeks = Math.max(1, parseInt(val('num-weeks-sched')) || 16);
+      const days = getDayNames();
+      const dayLabels = document.createElement('div');
+      dayLabels.className = 'week-link-day-labels';
+      dayLabels.style.gridTemplateColumns = days.map(() => '1fr').join(' ');
+      dayLabels.innerHTML = days.map(d => `<span>${escHtml(d)}</span>`).join('');
+      container.appendChild(dayLabels);
+
+      for (let w = 1; w <= numWeeks; w++) {
+        const row = document.createElement('div');
+        row.className = `week-link-row has-days-${days.length}`;
+        const inputs = days.map((d, i) => {
+          const saved = prev[`${w}-${i}`] || '';
+          return `<input type="url" data-week="${w}" data-day="${i}" placeholder="${escHtml(d)} URL" value="${escHtml(saved)}" />`;
+        }).join('');
+        row.innerHTML = `<span class="week-num">Week ${w}</span>${inputs}`;
+        container.appendChild(row);
+      }
+    }
+    document.querySelectorAll('#week-links-rows input').forEach(inp => inp.classList.toggle('filled', !!inp.value.trim()));
+  }
+
+  // ─────────────────────────────────────────
+  //  Link row management
+  // ─────────────────────────────────────────
+  function addLinkRow(listId) {
+    const list = document.getElementById(listId);
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    row.innerHTML = `<input type="text" placeholder="Button label" />
+      <input type="text" placeholder="URL" />
+      <button type="button" class="remove-btn" onclick="removeLinkRow(this)" aria-label="Remove">×</button>`;
+    list.appendChild(row);
+    row.querySelector('input').focus();
+    update();
+  }
+
+  function removeLinkRow(btn) {
+    const list = btn.closest('.link-section-builder');
+    if (list.querySelectorAll('.link-row').length === 1) {
+      list.querySelectorAll('input').forEach(i => i.value = '');
+    } else {
+      btn.closest('.link-row').remove();
+    }
+    update();
+  }
+
+  function addObjRow() {
+    const list = document.getElementById('obj-list');
+    const row = document.createElement('div');
+    row.className = 'obj-row';
+    row.innerHTML = `<textarea placeholder="Enter objective..."></textarea>
+      <button type="button" class="remove-btn" onclick="removeObjRow(this)" aria-label="Remove objective">×</button>`;
+    list.appendChild(row);
+    row.querySelector('textarea').focus();
+    update();
+  }
+
+  function removeObjRow(btn) {
+    const rows = document.querySelectorAll('#obj-list .obj-row');
+    if (rows.length === 1) { rows[0].querySelector('textarea').value = ''; }
+    else { btn.closest('.obj-row').remove(); }
+    update();
+  }
+
+  // ─────────────────────────────────────────
+  //  Data getters
+  // ─────────────────────────────────────────
+  function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+  function escHtml(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function getLinkRows(listId) {
+    return [...document.querySelectorAll(`#${listId} .link-row`)].map(row => {
+      const inputs = row.querySelectorAll('input');
+      return { label: inputs[0].value.trim(), url: inputs[1].value.trim() };
+    }).filter(l => l.label);
+  }
+
+  function getObjectives() {
+    return [...document.querySelectorAll('#obj-list textarea')].map(t => t.value.trim()).filter(Boolean);
+  }
+
+  function getDayNames() {
+    const numDays = parseInt(document.getElementById('num-days').value);
+    return [...document.querySelectorAll('.day-name')].slice(0, numDays)
+      .map((inp, i) => inp.value.trim() || `Day ${i+1}`);
+  }
+
+  function getCommon() {
+    return {
+      dept:   currentDept,
+      theme:  THEMES[currentDept],
+      name:   val('course-name')      || '[Course Name]',
+      num:    val('course-number')    || '[Number]',
+      instr:  val('instructor-name')  || '[Instructor Name]',
+      email:  val('instructor-email') || '[Email]',
+      office: val('instructor-office')|| '[Office]',
+      phone:  val('instructor-phone') || '[Phone]',
+      desc:   val('course-desc')      || '[Enter course description here.]',
+    };
+  }
+
+  // ─────────────────────────────────────────
+  //  Button block builders
+  // ─────────────────────────────────────────
+
+  // Shared plain-link-list builder. Deliberately avoids background-color,
+  // padding-as-button, and border-radius on the <a> itself, since those are
+  // exactly the inline styles most likely to get flattened when an instructor
+  // edits a link through Canvas's visual Rich Content Editor instead of the
+  // HTML source. A colored left border on the <li> plus bold underlined link
+  // text survives casual editing and still reads as "on brand."
+  function buildLinkListHTML(links, accent, marginTop) {
+    if (!links.length) return '';
+    const items = links.map(l => {
+      const href = l.url || '[PASTE URL HERE]';
+      const isExternal = l.url && !l.url.includes('instructure.com') && !l.url.startsWith('#');
+      const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const ext = isExternal ? ' <span style="font-size: 0.85rem;">(opens in new tab)</span>' : '';
+      return `
+    <li style="border-left: 4px solid ${accent}; padding: 0.5rem 0 0.5rem 0.75rem; margin-bottom: 0.5rem;">
+      <a href="${escHtml(href)}"${target} style="font-size: 1rem; text-decoration: underline;"><strong>${escHtml(l.label)}</strong></a>${ext}
+    </li>`;
+    }).join('');
+    return `
+  <ul style="list-style: none; margin: ${marginTop || '0'} 0 0 0; padding: 0;">${items}
+  </ul>`;
+  }
+
+  // Main Course Links
+  function buildBlueButtonsHTML(links) {
+    return buildLinkListHTML(links, '#095398');
+  }
+
+  // Course Resources (shown in the instructor header area)
+  function buildPurpleButtonsHTML(links) {
+    return buildLinkListHTML(links, '#8a498f');
+  }
+
+  // Additional Resources
+  function buildNavyButtonsHTML(links) {
+    return buildLinkListHTML(links, '#051d3c');
+  }
+
+  // Special Links (below weekly/schedule)
+  function buildSpecialLinksHTML(links) {
+    return buildLinkListHTML(links, '#8a498f', '1rem');
+  }
+
+  // ─────────────────────────────────────────
+  //  Section 4 builders (weekly / schedule)
+  // ─────────────────────────────────────────
+  function buildWeeklySectionHTML(numWeeks, specialLinks, weekLinks) {
+    weekLinks = weekLinks || {};
+    // Two floated <ul>s instead of a layout <table> — float/width/overflow
+    // are all on Canvas's confirmed-safe inline style allowlist (unlike
+    // font-weight etc.), so this survives save/re-save. No fixed pixel
+    // widths, so on a narrow screen the columns just narrow and the link
+    // text wraps instead of forcing horizontal scroll (WCAG 1.4.10 Reflow).
+    // Source order is still week 1 → numWeeks straight through (left column
+    // fully, then right column), so screen reader reading order matches the
+    // visual order (WCAG 1.3.2 Meaningful Sequence).
+    const half = Math.ceil(numWeeks / 2);
+    const makeItem = n => {
+      const href = (weekLinks[n] || '').trim() || `[WEEK ${n} URL]`;
+      return `
+    <li style="border-left: 4px solid #24abe2; padding: 0.5rem 0 0.5rem 0.75rem; margin-bottom: 0.5rem;">
+      <a href="${escHtml(href)}" style="font-size: 1rem; text-decoration: underline;"><strong>Week ${n}</strong></a>
+    </li>`;
+    };
+    const left  = Array.from({length: half}, (_, i) => i + 1).map(makeItem).join('');
+    const right = Array.from({length: numWeeks - half}, (_, i) => i + half + 1).map(makeItem).join('');
+    return `
+  <div style="overflow: hidden;">
+    <ul style="list-style: none; margin: 0; padding: 0; float: left; width: 48%;">${left}
+    </ul>
+    <ul style="list-style: none; margin: 0 0 0 4%; padding: 0; float: left; width: 48%;">${right}
+    </ul>
+  </div>
+${buildSpecialLinksHTML(specialLinks)}`;
+  }
+
+  function buildScheduleSectionHTML(days, numWeeks, specialLinks, weekLinks) {
+    weekLinks = weekLinks || {};
+    const thStyle     = `style="padding: 0.6rem 0.75rem; background-color: #095398; color: #ffffff; font-weight: 700; font-size: 0.9rem; text-align: center; border: 1px solid #24abe2;"`;
+    const weekThStyle = `style="padding: 0.6rem 0.75rem; background-color: #051d3c; color: #ffffff; font-weight: 700; font-size: 0.9rem; text-align: center; width: 20%; border: 1px solid #24abe2;"`;
+    const tdStyle     = `style="padding: 0.6rem 0.75rem; border: 1px solid #dde4ef; text-align: center; vertical-align: middle; font-size: 0.9rem;"`;
+    const weekTdStyle = `style="padding: 0.6rem 0.75rem; border: 1px solid #dde4ef; text-align: center; font-weight: 700; color: #051d3c; background-color: #f0f4fb; font-size: 0.9rem;"`;
+    const dayHeaders = days.map(d => `        <th scope="col" ${thStyle}><strong>${escHtml(d)}</strong></th>`).join('\n');
+    const rows = Array.from({length: numWeeks}, (_, i) => {
+      const w = i + 1;
+      const cells = days.map((d, di) => {
+        const url = (weekLinks[`${w}-${di}`] || '').trim();
+        const href = url || `[WEEK ${w} ${d.toUpperCase()} URL]`;
+        const label = url ? `Week ${w} – ${escHtml(d)}` : `[Week ${w} ${escHtml(d)} content]`;
+        return `        <td ${tdStyle}><a href="${escHtml(href)}" style="text-decoration: underline;">${label}</a></td>`;
+      }).join('\n');
+      return `      <tr>\n        <th scope="row" ${weekTdStyle}><strong>${w}</strong></th>\n${cells}\n      </tr>`;
+    }).join('\n');
+    return `
+  <table style="width: 100%; border-collapse: collapse; border: 1px solid #dde4ef;">
+    <thead>
+      <tr>
+        <th scope="col" ${weekThStyle}><strong>Week</strong></th>
+${dayHeaders}
+      </tr>
+    </thead>
+    <tbody>
+${rows}
+    </tbody>
+  </table>
+${buildSpecialLinksHTML(specialLinks)}`;
+  }
+
+  // ─────────────────────────────────────────
+  //  Full HTML output
+  // ─────────────────────────────────────────
+  function buildHTML() {
+    const f = getCommon();
+    const phoneDigits = f.phone.replace(/\D/g, '');
+
+    const resourceLinks  = [NEED_HELP_LINK, ...getLinkRows('resources-list')];
+    const mainLinks      = getLinkRows('main-links-list');
+    const specialLinks   = getLinkRows('special-links-list');
+    const additionalLinks= getLinkRows('additional-links-list');
+    const objs           = getObjectives();
+
+    const objItems = objs.length
+      ? objs.map(o => `\n    <li style="font-size: 0.95rem; color: #1a1a1a; line-height: 1.6; margin-bottom: 0.5rem;">${escHtml(o)}</li>`).join('')
+      : `\n    <li style="font-size: 0.95rem; color: #1a1a1a; line-height: 1.6; margin-bottom: 0.5rem;">[Enter objective here.]</li>`;
+
+    const weekLinkValues = collectWeekLinkValues();
+
+    let section4Content, section4Heading;
+    if (currentFormat === 'weekly') {
+      section4Content = buildWeeklySectionHTML(Math.max(1, parseInt(val('num-weeks')) || 16), specialLinks, weekLinkValues);
+      section4Heading = 'Weekly Course Materials';
+    } else {
+      section4Content = buildScheduleSectionHTML(getDayNames(), Math.max(1, parseInt(val('num-weeks-sched')) || 16), specialLinks, weekLinkValues);
+      section4Heading = 'Class Schedule';
+    }
+
+    // Resources block (purple, in header section)
+    const resourcesBlock = resourceLinks.length ? `
+  <div style="margin-top: 1rem;">
+${buildPurpleButtonsHTML(resourceLinks)}
+  </div>` : '';
+
+    // Main links section (omit if empty)
+    const mainLinksSection = mainLinks.length ? `
+
+<!-- ═══════════════════════════════════════════
+     SECTION 3: MAIN COURSE LINKS
+     ═══════════════════════════════════════════ -->
+
+<div style="margin-bottom: 2rem; border-top: 3px solid #095398; padding-top: 1.25rem;">
+
+  <h2 style="font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 1rem 0;"><strong>Main Course Links</strong></h2>
+
+${buildBlueButtonsHTML(mainLinks)}
+
+</div>` : '';
+
+    // Additional resources section (omit if empty)
+    const additionalSection = additionalLinks.length ? `
+
+<!-- ═══════════════════════════════════════════
+     SECTION 5: ADDITIONAL RESOURCES
+     ═══════════════════════════════════════════ -->
+
+<div style="margin-bottom: 2rem; border-top: 3px solid #095398; padding-top: 1.25rem;">
+
+  <h2 style="font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 1rem 0;"><strong>Additional Resources</strong></h2>
+
+${buildNavyButtonsHTML(additionalLinks)}
+
+</div>` : '';
+
+    return `<div style="border-bottom: 3px solid ${f.theme.bannerAccent}; padding-bottom: 1.5rem; margin-bottom: 2rem;">
+
+  <div style="background-color: ${f.theme.bannerBg}; border-radius: 6px; padding: 1.5rem 2rem; margin-bottom: 1.25rem;">
+    <p style="margin: 0 0 0.25rem 0; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: ${f.theme.bannerSubtext};"><strong>${escHtml(f.theme.label.toUpperCase())}</strong></p>
+    <p style="margin: 0 0 0.2rem 0; font-size: 1.5rem; font-weight: 700; color: ${f.theme.bannerText};"><strong>${escHtml(f.name)}</strong></p>
+    <p style="margin: 0; font-size: 1rem; color: ${f.theme.bannerSubtext};">${escHtml(f.dept)}${escHtml(f.num)}</p>
+  </div>
+
+  <h2 style="font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 0.75rem 0; padding-bottom: 0.4rem; border-bottom: 2px solid ${f.theme.bannerAccent};"><strong>Instructor Information</strong></h2>
+  <p style="margin: 0.3rem 0; font-size: 0.95rem; color: #1a1a1a;"><strong>Instructor:</strong> ${escHtml(f.instr)}</p>
+  <p style="margin: 0.3rem 0; font-size: 0.95rem; color: #1a1a1a;"><strong>Email:</strong> <a href="mailto:${escHtml(f.email)}" style="text-decoration: underline;">${escHtml(f.email)}</a></p>
+  <p style="margin: 0.3rem 0; font-size: 0.95rem; color: #1a1a1a;"><strong>Office:</strong> ${escHtml(f.office)}</p>
+  <p style="margin: 0.3rem 0; font-size: 0.95rem; color: #1a1a1a;"><strong>Phone:</strong> <a href="tel:+1${phoneDigits}" style="text-decoration: underline;">${escHtml(f.phone)}</a></p>${resourcesBlock}
+
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2: COURSE DESCRIPTION
+     ═══════════════════════════════════════════ -->
+
+<div style="margin-bottom: 2rem; border-top: 3px solid #095398; padding-top: 1.25rem;">
+
+  <h2 style="font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 1rem 0;"><strong>Course Description</strong></h2>
+
+  <p style="font-size: 0.95rem; color: #1a1a1a; line-height: 1.6; margin: 0 0 0.75rem 0;">${escHtml(f.desc)}</p>
+
+</div>
+${mainLinksSection}
+
+<!-- ═══════════════════════════════════════════
+     SECTION 4: ${section4Heading.toUpperCase()}
+     ═══════════════════════════════════════════ -->
+
+<div style="margin-bottom: 2rem; border-top: 3px solid #095398; padding-top: 1.25rem;">
+
+  <h2 style="font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 1rem 0;"><strong>${escHtml(section4Heading)}</strong></h2>
+${section4Content}
+
+</div>
+${additionalSection}
+
+<!-- ═══════════════════════════════════════════
+     SECTION 6: COURSE OBJECTIVES
+     ═══════════════════════════════════════════ -->
+
+<div style="border-top: 3px solid #095398; padding-top: 1.25rem;">
+
+  <h2 style="font-size: 1rem; font-weight: 700; color: #051d3c; margin: 0 0 1rem 0;"><strong>Course Objectives</strong></h2>
+
+  <p style="font-size: 0.95rem; color: #1a1a1a; line-height: 1.6; margin: 0 0 0.75rem 0;">
+    Upon completion of the course, the student will be able to:
+  </p>
+
+  <ul style="margin: 0; padding: 0 0 0 1.5rem;">${objItems}
+  </ul>
+
+</div>
+
+<!-- ============================================================
+  CANVAS LMS – ACCESSIBLE COURSE HOMEPAGE
+  ${escHtml(f.dept)} ${escHtml(f.num)}: ${escHtml(f.name)}
+  Instructor: ${escHtml(f.instr)}
+
+  CANVAS COMPATIBILITY: Inline styles only — no <style> blocks,
+  no classes, no JavaScript. Canvas renders the page title as
+  h1, so all section headings here use h2 (no skipped levels).
+
+  EDITOR INSTRUCTIONS:
+  - Instructor info: edit text inside <p> tags only
+  - Course description: edit text inside the <p> tag only
+  - Objectives: copy or delete <li> blocks in the final section
+  - Do NOT change any style="" attribute values
+  ============================================================ -->`;
+  }
+
+  // ─────────────────────────────────────────
+  //  Preview
+  // ─────────────────────────────────────────
+  // Links intentionally carry NO custom color, matching the real output —
+  // Canvas's own link color renders both before and after an instructor
+  // edits them, so nothing can go out of sync. Only the border accent
+  // (on the <li>, never touched by Canvas's link tool) stays brand-colored.
+  const LINK_COLOR = '#0374b5';
+  function previewLinkList(links, accent) {
+    if (!links.length) return '';
+    const items = links.map(l => `<li style="border-left:4px solid ${accent};padding:0.5rem 0 0.5rem 0.75rem;margin-bottom:0.5rem;"><a href="#" style="color:${LINK_COLOR};font-size:1rem;text-decoration:underline;font-weight:700;">${escHtml(l.label)}</a></li>`).join('');
+    return `<ul style="list-style:none;margin:0;padding:0;">${items}</ul>`;
+  }
+
+  function buildPreview() {
+    const f = getCommon();
+    const resourceLinks   = [NEED_HELP_LINK, ...getLinkRows('resources-list')];
+    const mainLinks       = getLinkRows('main-links-list');
+    const specialLinks    = getLinkRows('special-links-list');
+    const additionalLinks = getLinkRows('additional-links-list');
+    const objs = getObjectives();
+
+    const objItems = objs.length
+      ? objs.map(o => `<li style="font-size:0.95rem;color:#1a1a1a;line-height:1.6;margin-bottom:0.5rem;">${escHtml(o)}</li>`).join('')
+      : `<li style="font-size:0.95rem;color:#1a1a1a;line-height:1.6;margin-bottom:0.5rem;">[Enter objective here.]</li>`;
+
+    const resourcesPreview = resourceLinks.length
+      ? `<div style="margin-top:1rem;">${previewLinkList(resourceLinks, '#8a498f')}</div>`
+      : '';
+
+    const mainLinksPreview = mainLinks.length
+      ? `<div style="margin-bottom:2rem;border-top:3px solid #095398;padding-top:1.25rem;"><h2>Main Course Links</h2>${previewLinkList(mainLinks, '#095398')}</div>`
+      : '';
+
+    const additionalPreview = additionalLinks.length
+      ? `<div style="margin-bottom:2rem;border-top:3px solid #095398;padding-top:1.25rem;"><h2>Additional Resources</h2>${previewLinkList(additionalLinks, '#051d3c')}</div>`
+      : '';
+
+    const specialPreview = previewLinkList(specialLinks, '#8a498f');
+
+    const wlv = collectWeekLinkValues();
+    let section4Preview, section4Heading;
+    if (currentFormat === 'weekly') {
+      const nw = Math.max(1, parseInt(val('num-weeks')) || 16);
+      const half = Math.ceil(nw / 2);
+      const makeItem = n => {
+        const filled = !!(wlv[n] && wlv[n].trim());
+        const accent = filled ? '#16a34a' : '#24abe2';
+        return `<li style="border-left:4px solid ${accent};padding:0.5rem 0 0.5rem 0.75rem;margin-bottom:0.5rem;"><a href="#" style="color:${LINK_COLOR};font-size:1rem;text-decoration:underline;font-weight:700;">Week ${n}</a>${filled ? ' <span style="font-size:0.75rem;color:#16a34a;">(linked)</span>' : ''}</li>`;
+      };
+      const left  = Array.from({length: half}, (_, i) => i + 1).map(makeItem).join('');
+      const right = Array.from({length: nw - half}, (_, i) => i + half + 1).map(makeItem).join('');
+      section4Preview = `<div style="overflow:hidden;">
+        <ul style="list-style:none;margin:0;padding:0;float:left;width:48%;">${left}</ul>
+        <ul style="list-style:none;margin:0 0 0 4%;padding:0;float:left;width:48%;">${right}</ul>
+      </div>${specialPreview ? `<div style="margin-top:1rem;clear:both;">${specialPreview}</div>` : ''}`;
+      section4Heading = 'Weekly Course Materials';
+    } else {
+      const days = getDayNames();
+      const nw   = Math.max(1, parseInt(val('num-weeks-sched')) || 16);
+      const thS  = `padding:0.6rem 0.75rem;background-color:#095398;color:#fff;font-weight:700;font-size:0.9rem;text-align:center;border:1px solid #24abe2;`;
+      const wThS = `padding:0.6rem 0.75rem;background-color:#051d3c;color:#fff;font-weight:700;font-size:0.9rem;text-align:center;width:20%;border:1px solid #24abe2;`;
+      const tdS  = `padding:0.6rem 0.75rem;border:1px solid #dde4ef;text-align:center;font-size:0.9rem;color:#095398;`;
+      const tdSFilled = `padding:0.6rem 0.75rem;border:1px solid #dde4ef;text-align:center;font-size:0.9rem;color:#16a34a;font-weight:600;`;
+      const wTdS = `padding:0.6rem 0.75rem;border:1px solid #dde4ef;text-align:center;font-weight:700;color:#051d3c;background-color:#f0f4fb;font-size:0.9rem;`;
+      const hdrs = days.map(d=>`<th style="${thS}">${escHtml(d)}</th>`).join('');
+      const rows = Array.from({length:nw},(_,i)=>{
+        const w=i+1;
+        return `<tr><th style="${wTdS}">${w}</th>${days.map((d,di)=>{
+          const filled = !!(wlv[`${w}-${di}`] && wlv[`${w}-${di}`].trim());
+          return `<td style="${filled ? tdSFilled : tdS}">${filled ? 'Linked' : `Week ${w} ${escHtml(d)}`}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+      section4Preview = `<table style="width:100%;border-collapse:collapse;border:1px solid #dde4ef;">
+        <thead><tr><th style="${wThS}">Week</th>${hdrs}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>${specialPreview ? `<div style="margin-top:1rem;">${specialPreview}</div>` : ''}`;
+      section4Heading = 'Class Schedule';
+    }
+
+    return `
+      <div style="border-bottom:3px solid ${f.theme.bannerAccent};padding-bottom:1.5rem;margin-bottom:2rem;">
+        <div style="background-color:${f.theme.bannerBg};border-radius:6px;padding:1.5rem 2rem;margin-bottom:1.25rem;">
+          <p style="margin:0 0 0.25rem 0;font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${f.theme.bannerSubtext};">${escHtml(f.theme.label)}</p>
+          <p style="margin:0 0 0.2rem 0;font-size:1.5rem;font-weight:700;color:${f.theme.bannerText};">${escHtml(f.name)}</p>
+          <p style="margin:0;font-size:1rem;color:${f.theme.bannerSubtext};">${escHtml(f.dept)}${escHtml(f.num)}</p>
+        </div>
+        <h2 style="font-size:1rem;font-weight:700;color:#051d3c;margin:0 0 0.75rem 0;padding-bottom:0.4rem;border-bottom:2px solid ${f.theme.bannerAccent};">Instructor Information</h2>
+        <p style="margin:0.3rem 0;font-size:0.95rem;"><strong>Instructor:</strong> ${escHtml(f.instr)}</p>
+        <p style="margin:0.3rem 0;font-size:0.95rem;"><strong>Email:</strong> <a href="mailto:${escHtml(f.email)}" style="color:${LINK_COLOR};">${escHtml(f.email)}</a></p>
+        <p style="margin:0.3rem 0;font-size:0.95rem;"><strong>Office:</strong> ${escHtml(f.office)}</p>
+        <p style="margin:0.3rem 0;font-size:0.95rem;"><strong>Phone:</strong> ${escHtml(f.phone)}</p>
+        ${resourcesPreview}
+      </div>
+      <div style="margin-bottom:2rem;border-top:3px solid #095398;padding-top:1.25rem;">
+        <h2>Course Description</h2>
+        <p style="font-size:0.95rem;color:#1a1a1a;line-height:1.6;margin:0;">${escHtml(f.desc)}</p>
+      </div>
+      ${mainLinksPreview}
+      <div style="margin-bottom:2rem;border-top:3px solid #095398;padding-top:1.25rem;">
+        <h2>${escHtml(section4Heading)}</h2>
+        ${section4Preview}
+      </div>
+      ${additionalPreview}
+      <div style="border-top:3px solid #095398;padding-top:1.25rem;">
+        <h2>Course Objectives</h2>
+        <p style="font-size:0.95rem;color:#1a1a1a;line-height:1.6;margin:0 0 0.75rem 0;">Upon completion of the course, the student will be able to:</p>
+        <ul style="margin:0;padding:0 0 0 1.5rem;">${objItems}</ul>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────
+  //  Copy
+  // ─────────────────────────────────────────
+  async function copyHTML() {
+    const html = buildHTML();
+    try { await navigator.clipboard.writeText(html); }
+    catch {
+      const ta = document.createElement('textarea');
+      ta.value = html; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const btn = document.getElementById('copy-btn');
+    btn.classList.add('copied'); btn.textContent = '✓ Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy HTML for Canvas`;
+    }, 2500);
+  }
+
+  function update() { document.getElementById('preview-frame').innerHTML = buildPreview(); }
+  renderWeekLinks();
+  update();
+</script>
+</body>
+</html>
