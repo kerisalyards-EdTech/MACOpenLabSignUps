@@ -42,6 +42,17 @@ Marathon Leaderboard.
    students sign up. This becomes your permanent record of who signed up, for what
    slot, and when they submitted it. Don't hand-edit it while the page is live.
 
+4. **Optional:** if you expect to need one-off exceptions (a cancelled day, or one
+   date with different hours), add a third tab named exactly: **`Date Overrides`**
+   In row 1, add these headers exactly:
+
+   | Date | Start Time | End Time | Capacity | Note |
+   |------|-----------|----------|----------|------|
+
+   See **"Handling one-off exceptions"** below for how to use it. You can skip this
+   tab entirely if you don't need it yet — the page works fine without it and you
+   can add it later.
+
 ## Step 2: Install the Apps Script
 
 1. In your Sheet, go to **Extensions > Apps Script**.
@@ -119,6 +130,51 @@ Adjust `height` if the page feels cramped or oversized once you see it live —
 - The page shows the **next 21 days** of availability by default. Change
   `DAYS_AHEAD` near the top of `index.html`'s script if you want more or less lead
   time.
+
+## Handling one-off exceptions
+
+For an exception to just one specific date — canceling a single lab day, or giving
+one date different hours or capacity — without touching the regular weekly pattern,
+use the **`Date Overrides`** tab (see Step 1.4 above if you haven't created it yet).
+
+**To cancel one date entirely:**
+Add a row with just the date filled in — leave Start Time and End Time blank.
+That date won't show any slots at all, even though it's normally a scheduled day.
+
+| Date | Start Time | End Time | Capacity | Note |
+|------|-----------|----------|----------|------|
+| 11/26/2026 | | | | Thanksgiving break |
+
+**To change hours or capacity for one date only:**
+Add a row with the date plus new Start Time, End Time, and Capacity. That date uses
+these hours instead of the Schedule tab's normal rows — every other date on the
+recurring schedule is unaffected.
+
+| Date | Start Time | End Time | Capacity | Note |
+|------|-----------|----------|----------|------|
+| 12/10/2026 | 9:00 AM | 12:00 PM | 10 | Shortened for finals week |
+
+A few notes:
+- The `Note` column is just for your own reference — the page ignores it.
+- An override only affects the one date in that row. Nothing else on the recurring
+  Schedule tab changes.
+- Like the Schedule tab, changes here show up the next time a student loads or
+  refreshes the page — no redeploying needed.
+- Students who already signed up for a date before you cancel or change it won't
+  be automatically notified — you'd still want to let them know directly (their
+  emails are in the `Signups` tab).
+
+**Format matters here — an unrecognized format fails silently.** If the Date
+column isn't typed in a way Google Sheets recognizes as an actual date, the
+override just won't match anything, and that date will quietly fall back to the
+normal recurring schedule with no error shown. To avoid that:
+- **Date:** type as `M/D/YYYY`, e.g. `11/26/2026`. Avoid formats like "Nov 26" —
+  those risk being stored as plain text instead of a real date.
+- **Start Time / End Time:** same as the Schedule tab — `12:00 PM`, `9:00 AM`, etc.
+- **Capacity:** a plain number, e.g. `10`.
+
+After adding an override row, it's worth loading the live page once to confirm the
+date shows the expected (or no) slots before telling students about the change.
 
 ## Things worth knowing
 
