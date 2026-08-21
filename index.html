@@ -273,11 +273,11 @@
   // ============================================================
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOhPJakln_T6DKOOTrmaJZax3LE70_uRDb-I8V0ujZRcX6I-51iH3sm4X011als4Ej/exec';
 
-  // How many days ahead to REQUEST from the sheet. The actual cutoff shown to
-  // students is controlled by SEMESTER_END_DATE in Code.gs — that's the one
-  // to update each semester, not this number. This is just a generous cap
-  // so a request is never the limiting factor.
-  const DAYS_AHEAD = 400;
+  // How many days ahead to show students at a time (a rolling window from
+  // whenever the page loads). SEMESTER_END_DATE in Code.gs is still a hard
+  // backstop — even if this number is large, the page will never show past
+  // that date.
+  const DAYS_AHEAD = 21;
 
   let slotsData = [];       // raw response from the sheet
   let selectedSlot = null;  // { date, dateLabel, timeLabel }
